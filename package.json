@@ -1,0 +1,14 @@
+{
+  "name": "fantasy-boss-clicker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Foundation for Fantasy Boss Clicker (Yandex Games / Samsung Instant Plays / YouTube Playables).",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "serve": "python3 -m http.server 5173"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}
