@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fantasy Boss Clicker</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="menu" class="panel">
+        <h1 data-i18n="game_title">Fantasy Boss Clicker</h1>
+        <button id="btnStart" data-i18n="start_game">Начать игру</button>
+        <button id="btnLoad" data-i18n="load_game">Загрузить</button>
+        <button id="btnSave" data-i18n="save_game">Сохранить</button>
+        <button id="btnSettings" data-i18n="settings">Настройки</button>
+      </div>
+
+      <div id="settingsModal" class="modal hidden">
+        <div class="modal-content">
+          <h2 data-i18n="settings">Настройки</h2>
+          <label>
+            <span data-i18n="volume">Громкость</span>
+            <input id="volumeRange" type="range" min="0" max="1" step="0.01" />
+          </label>
+          <label>
+            <span data-i18n="language">Язык</span>
+            <select id="languageSelect">
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+          <button id="btnCloseSettings" data-i18n="close">Закрыть</button>
+        </div>
+      </div>
+
+      <div id="game" class="hidden">
+        <div id="hud">
+          <div id="currencies">
+            <span id="gold">0</span> <span data-i18n="gold">золото</span>
+            • <span id="crystals">0</span> <span data-i18n="crystals">кристаллы</span>
+          </div>
+          <div id="hudButtons">
+            <button id="btnPause" data-i18n="pause">Пауза</button>
+            <button id="btnInGameSettings" data-i18n="settings">Настройки</button>
+            <button id="btnMenu" data-i18n="menu">Меню</button>
+          </div>
+        </div>
+        <div id="bossArea">
+          <div id="bossInfo">
+            <span data-i18n="boss">Босс</span>
+            <span id="bossLevel">1</span>
+            <div class="hpbar"><div id="bossHpBar"></div></div>
+          </div>
+          <div id="bossSprite" title="Click!"></div>
+        </div>
+        <div id="portraits"></div>
+      </div>
+
+      <div id="postBossChoice" class="panel hidden">
+        <h2 data-i18n="choose_next">Куда пойти?</h2>
+        <button id="btnGoTavern" data-i18n="go_tavern">В таверну</button>
+        <button id="btnGoMerchant" data-i18n="go_merchant">К торговцу</button>
+      </div>
+
+      <div id="tavern" class="panel hidden">
+        <h2 data-i18n="tavern">Таверна</h2>
+        <div id="tavernList"></div>
+        <button id="btnBackFromTavern" data-i18n="back">Назад</button>
+      </div>
+
+      <div id="merchant" class="panel hidden">
+        <h2 data-i18n="merchant">Торговец</h2>
+        <div id="merchantList"></div>
+        <button id="btnBackFromMerchant" data-i18n="back">Назад</button>
+      </div>
+    </div>
+
+    <script type="module" src="./dist/main.js"></script>
+  </body>
+</html>
