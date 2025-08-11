@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Slime Pop - Relax Game</title>
+  <style>
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 800px at 50% 40%, #f1fff7 0%, #e9f7ff 40%, #eae6ff 80%);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+      color: #1d2733;
+      overflow: hidden;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #game-root {
+      position: fixed;
+      inset: 0;
+    }
+    #game-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .menu {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: auto;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(3px);
+    }
+    .card {
+      background: rgba(255,255,255,0.85);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.10);
+      padding: 24px 28px;
+      text-align: center;
+      width: min(90vw, 420px);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      letter-spacing: 0.5px;
+    }
+    p {
+      margin: 0 0 16px;
+      opacity: 0.8;
+      font-size: 14px;
+    }
+    .btn {
+      appearance: none;
+      border: 0;
+      background: linear-gradient(180deg, #69e2a3, #41c38a);
+      color: white;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(65,195,138,0.35);
+      transition: transform 0.06s ease, box-shadow 0.2s ease;
+    }
+    .btn:hover { box-shadow: 0 10px 24px rgba(65,195,138,0.45); }
+    .btn:active { transform: translateY(1px) scale(0.99); }
+
+    .hud {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .chip {
+      pointer-events: auto;
+      background: rgba(255,255,255,0.85);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #score-label { min-width: 120px; text-align: left; }
+    .right-controls { display: inline-flex; gap: 8px; }
+    .icon-btn {
+      pointer-events: auto;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: inline-grid; place-items: center;
+      background: rgba(255,255,255,0.9);
+      border: 0;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; border: 0; padding: 0; overflow: hidden; clip: rect(0 0 0 0); }
+  </style>
+</head>
+<body>
+  <div id="game-root">
+    <canvas id="game-canvas"></canvas>
+
+    <div class="overlay hud" id="hud" style="display:none">
+      <div class="chip" id="score-label">Счёт: 0</div>
+      <div class="right-controls">
+        <button class="icon-btn" id="mute-btn" aria-label="Звук">
+          <span id="mute-icon">🔊</span>
+        </button>
+        <button class="icon-btn" id="menu-btn" aria-label="Меню">⏸</button>
+      </div>
+    </div>
+
+    <div class="overlay menu" id="menu">
+      <div class="card">
+        <h1>Slime Pop</h1>
+        <p>Лопай слаймов. Расслабляйся. Получай очки.</p>
+        <button class="btn" id="play-btn">Играть</button>
+        <div style="margin-top:12px; font-size:12px; opacity:0.7;">Нажимая, вы включаете звук</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
