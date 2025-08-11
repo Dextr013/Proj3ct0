@@ -3,6 +3,7 @@ import { Slime } from './slime.js';
 import { Spawner } from './spawner.js';
 import { ParticleSystem } from './particles.js';
 import { createBackgroundRenderer } from './render_background.js';
+import { getAssets } from './assets.js';
 
 const GAME_CONFIG = {
   maxActiveSlimes: 50,
@@ -40,6 +41,9 @@ export class Game {
     this._handlePointerDown = this._handlePointerDown.bind(this);
 
     this.bgRenderer = createBackgroundRenderer();
+
+    // kick off assets load (non-blocking)
+    getAssets().ensureLoadedSlimes();
   }
 
   start() {
@@ -58,14 +62,13 @@ export class Game {
 
   _handlePointerDown(pt) {
     if (!this.isRunning) return;
-    // Iterate from top-most
     for (let i = this.slimes.length - 1; i >= 0; i -= 1) {
       const slime = this.slimes[i];
       if (!slime.isAlive) continue;
       if (slime.containsPoint(pt.x, pt.y)) {
-        // prevent double scoring by finalizing immediately
+        if (slime.hasScored) return;
+        slime.hasScored = true;
         slime.pop();
-        slime.isAlive = false;
         const awarded = Math.max(1, Math.round(GAME_CONFIG.baseScorePerSlime * slime.getScoreMultiplier()));
         this.score += awarded;
         this.onScoreChange?.(this.score);
@@ -77,20 +80,19 @@ export class Game {
           count: 10,
           baseVelocity: 140,
         });
-        return; // single pop per click
+        return;
       }
     }
   }
 
   update(dt, width, height) {
     if (!this.isRunning) return;
-    // Spawn slimes
     if (this.slimes.length < GAME_CONFIG.maxActiveSlimes && this.spawner.shouldSpawn(dt)) {
-      const slime = Slime.spawnRandom({ width, height });
+      const spriteSheet = getAssets().getRandomSlimeSheet();
+      const slime = Slime.spawnRandom({ width, height, spriteSheet });
       this.slimes.push(slime);
     }
 
-    // Update slimes
     for (let i = this.slimes.length - 1; i >= 0; i -= 1) {
       const slime = this.slimes[i];
       slime.update(dt, width, height);
@@ -103,7 +105,6 @@ export class Game {
       }
     }
 
-    // Update particles
     this.particles.update(dt, width, height);
   }
 
@@ -113,16 +114,12 @@ export class Game {
     const h = this.canvas.height;
 
     ctx.clearRect(0, 0, w, h);
-
-    // Cached background
     this.bgRenderer.draw(ctx, w, h);
 
-    // Render slimes
     for (let i = 0; i < this.slimes.length; i += 1) {
       this.slimes[i].render(ctx);
     }
 
-    // Render particles on top
     this.particles.render(ctx);
   }
 }

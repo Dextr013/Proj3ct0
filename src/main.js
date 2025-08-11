@@ -1,6 +1,7 @@
 import { Game } from './modules/game.js';
 import { AudioManager } from './modules/audio.js';
 import { AdManager } from './modules/ads.js';
+import { getAssets } from './modules/assets.js';
 
 const canvas = document.getElementById('game-canvas');
 const hud = document.getElementById('hud');
@@ -39,6 +40,9 @@ async function startGame() {
   await audio.unlock();
   await audio.startMusic();
 
+  // Preload sprites concurrently (non-blocking for start)
+  getAssets().ensureLoadedSlimes().catch(() => {});
+
   game = new Game({ canvas, audio, onScoreChange: updateScoreLabel });
   updateScoreLabel(0);
   game.start();
@@ -65,7 +69,6 @@ playBtn.addEventListener('click', async () => {
 });
 
 menuBtn.addEventListener('click', async () => {
-  // Pause and return to menu; show ad interstitial if available
   try {
     await ads.showInterstitial({ reason: 'pause' });
   } catch (_) { /* ignore */ }
@@ -83,7 +86,6 @@ muteBtn.addEventListener('click', () => {
   muteIcon.textContent = nextMuted ? '🔇' : '🔊';
 });
 
-// Handle visibility change
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     audio.suspend();
@@ -92,5 +94,4 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-// Initial canvas sizing
 resizeCanvasToDisplaySize();

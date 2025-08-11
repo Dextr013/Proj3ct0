@@ -10,7 +10,7 @@ const COLORS = [
 ];
 
 export class Slime {
-  constructor({ x, y, radius, color, driftAngle, driftSpeed }) {
+  constructor({ x, y, radius, color, driftAngle, driftSpeed, spriteSheet = null }) {
     this.x = x;
     this.y = y;
     this.radius = radius;
@@ -26,9 +26,13 @@ export class Slime {
     this.isAlive = true;
     this.isPopping = false;
     this.hasScored = false;
+
+    this.spriteSheet = spriteSheet;
+    this.animTime = 0;
+    this.animFps = 8 + Math.random() * 4; // 8..12 fps
   }
 
-  static spawnRandom({ width, height }) {
+  static spawnRandom({ width, height, spriteSheet = null }) {
     const margin = 40;
     const x = randRange(margin, width - margin);
     const y = randRange(margin, height - margin);
@@ -36,7 +40,7 @@ export class Slime {
     const color = COLORS[randInt(0, COLORS.length - 1)];
     const driftAngle = randRange(0, Math.PI * 2);
     const driftSpeed = randRange(5, 28);
-    return new Slime({ x, y, radius, color, driftAngle, driftSpeed });
+    return new Slime({ x, y, radius, color, driftAngle, driftSpeed, spriteSheet });
   }
 
   containsPoint(px, py) {
@@ -51,7 +55,6 @@ export class Slime {
   }
 
   getScoreMultiplier() {
-    // Smaller slimes give slightly higher score; vary 0.8..1.6
     const normalized = clamp(this.baseRadius / 60, 0.4, 1.2);
     return clamp(1.6 - normalized, 0.8, 1.6);
   }
@@ -76,14 +79,26 @@ export class Slime {
       this.driftAngle = -this.driftAngle;
       this.y = clamp(this.y, this.radius, height - this.radius);
     }
+
+    // Animation time
+    this.animTime += dt;
   }
 
   render(ctx) {
     if (!this.isAlive) return;
+
+    if (this.spriteSheet) {
+      const frames = Math.max(1, this.spriteSheet.totalFrames);
+      const frameIndex = Math.floor(this.animTime * this.animFps) % frames;
+      const targetDiameter = Math.max(4, this.radius * 2);
+      const scale = targetDiameter / this.spriteSheet.frameWidth;
+      this.spriteSheet.drawFrame(ctx, frameIndex, this.x, this.y, scale, this.alpha);
+      return;
+    }
+
+    // Fallback: procedural blob
     ctx.save();
     ctx.globalAlpha = this.alpha;
-
-    // Soft blob with inner highlight
     const grd = ctx.createRadialGradient(this.x - this.radius * 0.4, this.y - this.radius * 0.5, this.radius * 0.2, this.x, this.y, this.radius);
     grd.addColorStop(0, 'rgba(255,255,255,0.95)');
     grd.addColorStop(0.3, this.color);
@@ -94,7 +109,6 @@ export class Slime {
     ctx.arc(this.x, this.y, Math.max(2, this.radius), 0, Math.PI * 2);
     ctx.fill();
 
-    // Glossy highlight spot
     ctx.globalAlpha *= 0.6;
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
     ctx.beginPath();
