@@ -84,8 +84,23 @@ export class Slime {
     this.animTime += dt;
   }
 
+  renderShadow(ctx) {
+    // soft oval shadow under slime
+    const shadowY = this.y + this.radius * 0.15;
+    const shadowR = this.radius * 0.9;
+    ctx.save();
+    ctx.globalAlpha = 0.18 * this.alpha;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(this.x, shadowY, shadowR, shadowR * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   render(ctx) {
     if (!this.isAlive) return;
+
+    this.renderShadow(ctx);
 
     if (this.spriteSheet) {
       const frames = Math.max(1, this.spriteSheet.totalFrames);

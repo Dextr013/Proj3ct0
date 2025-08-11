@@ -11,11 +11,44 @@ const muteIcon = document.getElementById('mute-icon');
 const menuBtn = document.getElementById('menu-btn');
 const menu = document.getElementById('menu');
 const playBtn = document.getElementById('play-btn');
+const statsEl = document.getElementById('stats');
+const musicToggle = document.getElementById('music-toggle');
+const sfxToggle = document.getElementById('sfx-toggle');
+
+const STORAGE_KEY = 'slimepop_meta_v1';
+function loadMeta() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
+}
+function saveMeta(obj) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch {}
+}
 
 const audio = new AudioManager();
 const ads = new AdManager({ provider: 'auto' });
 let game = null;
 let animationHandle = null;
+let lastScore = 0;
+let bestScore = 0;
+
+const meta = loadMeta();
+if (typeof meta.bestScore === 'number') bestScore = meta.bestScore;
+if (typeof meta.lastScore === 'number') lastScore = meta.lastScore;
+
+function updateStatsUI() {
+  statsEl.textContent = `Последний счёт: ${lastScore} · Рекорд: ${bestScore}`;
+}
+updateStatsUI();
+
+// Initialize toggles with persisted audio settings when available
+musicToggle.checked = audio.getMusicEnabled();
+sfxToggle.checked = audio.getSfxEnabled();
+
+musicToggle.addEventListener('change', () => {
+  audio.setMusicEnabled(musicToggle.checked);
+});
+sfxToggle.addEventListener('change', () => {
+  audio.setSfxEnabled(sfxToggle.checked);
+});
 
 function resizeCanvasToDisplaySize() {
   const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -32,6 +65,7 @@ function showMenu() {
   cancelAnimationFrame(animationHandle);
   hud.style.display = 'none';
   menu.style.display = 'grid';
+  updateStatsUI();
 }
 
 async function startGame() {
@@ -40,12 +74,17 @@ async function startGame() {
   await audio.unlock();
   await audio.startMusic();
 
-  // Preload sprites concurrently (non-blocking for start)
   getAssets().ensureLoadedSlimes().catch(() => {});
 
-  game = new Game({ canvas, audio, onScoreChange: updateScoreLabel });
-  updateScoreLabel(0);
+  let combo = 0;
+  let lastPopTime = 0;
+  function onScoreChange(score) {
+    scoreLabel.textContent = `Счёт: ${score}`;
+  }
+
+  game = new Game({ canvas, audio, onScoreChange });
   game.start();
+  scoreLabel.textContent = 'Счёт: 0';
 
   let lastTime = performance.now();
   function loop(now) {
@@ -59,10 +98,6 @@ async function startGame() {
   animationHandle = requestAnimationFrame(loop);
 }
 
-function updateScoreLabel(score) {
-  scoreLabel.textContent = `Счёт: ${score}`;
-}
-
 // UI events
 playBtn.addEventListener('click', async () => {
   await startGame();
@@ -73,6 +108,12 @@ menuBtn.addEventListener('click', async () => {
     await ads.showInterstitial({ reason: 'pause' });
   } catch (_) { /* ignore */ }
   if (game) {
+    // capture final score from HUD text
+    const current = Number((scoreLabel.textContent || '').replace(/\D+/g, '')) || 0;
+    lastScore = current;
+    if (current > bestScore) bestScore = current;
+    saveMeta({ lastScore, bestScore });
+
     game.stop();
     game = null;
   }
@@ -93,5 +134,12 @@ document.addEventListener('visibilitychange', () => {
     audio.resume();
   }
 });
+
+// Light vibration feedback on supported devices when user taps canvas
+canvas.addEventListener('pointerdown', () => {
+  if (navigator.vibrate) {
+    try { navigator.vibrate(6); } catch {}
+  }
+}, { passive: true });
 
 resizeCanvasToDisplaySize();

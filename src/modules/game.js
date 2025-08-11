@@ -6,15 +6,15 @@ import { createBackgroundRenderer } from './render_background.js';
 import { getAssets } from './assets.js';
 
 const GAME_CONFIG = {
-  maxActiveSlimes: 50,
+  maxActiveSlimes: 60,
   baseScorePerSlime: 10,
   spawn: {
-    minIntervalMs: 400,
-    maxIntervalMs: 1100,
+    minIntervalMs: 380,
+    maxIntervalMs: 1050,
   },
   pop: {
-    radiusShrinkPerSecond: 220,
-    fadePerSecond: 3.0,
+    radiusShrinkPerSecond: 240,
+    fadePerSecond: 3.2,
   },
   stressModeMultiplier: Number(new URLSearchParams(location.search).get('stress') || 1),
 };
@@ -42,7 +42,6 @@ export class Game {
 
     this.bgRenderer = createBackgroundRenderer();
 
-    // kick off assets load (non-blocking)
     getAssets().ensureLoadedSlimes();
   }
 
@@ -73,13 +72,7 @@ export class Game {
         this.score += awarded;
         this.onScoreChange?.(this.score);
         this.audio.playPop();
-        this.particles.emitBurst({
-          x: slime.x,
-          y: slime.y,
-          color: slime.color,
-          count: 10,
-          baseVelocity: 140,
-        });
+        this.particles.emitBurst({ x: slime.x, y: slime.y, color: slime.color, count: 10, baseVelocity: 140 });
         return;
       }
     }
@@ -87,6 +80,12 @@ export class Game {
 
   update(dt, width, height) {
     if (!this.isRunning) return;
+
+    // Dynamic spawn pacing: reduce intervals slightly as score rises
+    const paceFactor = Math.min(0.6, this.score / 2000); // up to -60%
+    this.spawner.minIntervalMs = (GAME_CONFIG.spawn.minIntervalMs * (1 - paceFactor)) / GAME_CONFIG.stressModeMultiplier;
+    this.spawner.maxIntervalMs = (GAME_CONFIG.spawn.maxIntervalMs * (1 - paceFactor)) / GAME_CONFIG.stressModeMultiplier;
+
     if (this.slimes.length < GAME_CONFIG.maxActiveSlimes && this.spawner.shouldSpawn(dt)) {
       const spriteSheet = getAssets().getRandomSlimeSheet();
       const slime = Slime.spawnRandom({ width, height, spriteSheet });
